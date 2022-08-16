@@ -1,0 +1,81 @@
+{
+  "name": "vanity.web3",
+  "description": "Vanity address generator for web3",
+  "version": "0.1.0",
+  "author": "Y",
+  "bin": {
+    "vanity": "./bin/run"
+  },
+  "bugs": "https://github.com/rookie0/vanity.web3/issues",
+  "dependencies": {
+    "@ethereumjs/util": "^8.0.0-beta.1",
+    "@oclif/core": "^1",
+    "@oclif/plugin-autocomplete": "^1.3.0",
+    "@oclif/plugin-help": "^5",
+    "@oclif/plugin-plugins": "^2",
+    "@oclif/plugin-update": "^3.0.0",
+    "base-x": "^4.0.0",
+    "node-notifier": "^10.0.1",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@oclif/test": "^2",
+    "@types/chai": "^4",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.9.4",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "chai": "^4",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "globby": "^11",
+    "mocha": "^9",
+    "oclif": "^3",
+    "prettier": "^2.6.2",
+    "shx": "^0.3.3",
+    "ts-node": "^10.2.1",
+    "tslib": "^2.3.1",
+    "typescript": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "files": [
+    "/bin",
+    "/dist",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/rookie0/vanity.web3",
+  "keywords": [
+    "vanity",
+    "address",
+    "web3",
+    "ethereum",
+    "solana",
+    "cli"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "oclif": {
+    "bin": "vanity",
+    "dirname": "vanity.web3",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-autocomplete",
+      "@oclif/plugin-update"
+    ]
+  },
+  "repository": "https://github.com/rookie0/vanity.web3",
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint . --ext .ts --fix",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "prepack": "yarn build && oclif manifest && oclif readme",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\""
+  },
+  "types": "dist/index.d.ts"
+}
