@@ -1,6 +1,8 @@
 import { Command, Flags } from '@oclif/core';
 import { privateToAddress, toChecksumAddress } from '@ethereumjs/util';
 import { randomBytes } from 'crypto';
+import { sha3_256 } from 'js-sha3';
+
 import nacl = require('tweetnacl');
 
 const os = require('os');
@@ -14,7 +16,11 @@ const bs58 = require('base-x')(BASE58_ALPHABET);
 export default class Address extends Command {
     static description = 'Generate vanity address';
 
-    static examples = ['$ vanity address 012,111 abc,def -s -w 2', '$ vanity address so,far so,good -c solana -n 2'];
+    static examples = [
+        '$ vanity address 012,111 abc,def -s -w 2',
+        '$ vanity address so,far so,good -c solana -n 2',
+        '$ vanity address 0000 1111 -c aptos -w 1 -n 2',
+    ];
 
     static args = [
         {
@@ -36,7 +42,7 @@ export default class Address extends Command {
             char: 'c',
             description: 'The chain type to use for address generation',
             required: false,
-            options: ['evm', 'solana'],
+            options: ['evm', 'solana', 'aptos'],
             default: 'evm',
         }),
         caseSensitive: Flags.boolean({
@@ -65,8 +71,8 @@ export default class Address extends Command {
         const workers = Math.max(1, flags.workers || Math.floor(os.cpus().length / 2));
         const num = Math.max(1, flags.num);
 
-        if (prefixes.some((p) => p.length > 10) || suffixes.some((s) => s.length > 10)) {
-            this.error('Prefix and suffix must be less than 10 characters');
+        if (prefixes.some((p) => p.length > 20) || suffixes.some((s) => s.length > 20)) {
+            this.error('Prefix and suffix must be less than 20 characters');
             return;
         }
 
@@ -85,16 +91,21 @@ export default class Address extends Command {
 
                 break;
             case 'solana':
+            case 'aptos':
             default:
+                const alphabet = flags.chain === 'solana' ? BASE58_ALPHABET : HEX_CHARS;
                 if (
-                    !prefixes.every((p) => stringIncludes(BASE58_ALPHABET, p, flags.caseSensitive)) ||
-                    !suffixes.every((s) => stringIncludes(BASE58_ALPHABET, s, flags.caseSensitive))
+                    !prefixes.every((p) => stringIncludes(alphabet, p, flags.caseSensitive)) ||
+                    !suffixes.every((s) => stringIncludes(alphabet, s, flags.caseSensitive))
                 ) {
-                    this.error(`Prefix and suffix must be base58 strings(${BASE58_ALPHABET}) for solana`);
+                    this.error(
+                        `Prefix and suffix must be ${flags.chain === 'solana' ? 'base58' : 'hex'} strings(${alphabet}) for ${flags.chain}`,
+                    );
                     return;
                 }
 
-                generator = generateSolanaAddress;
+                generator = (prefixes: string[], suffixes: string[], caseSensitive: boolean): any =>
+                    generateEd25519Address(prefixes, suffixes, caseSensitive, flags.chain);
 
                 break;
         }
@@ -116,7 +127,7 @@ export default class Address extends Command {
                 });
             }
         } else {
-            const { address, privateKey } = generator(prefixes, suffixes, flags.caseSensitive);
+            const { address, privateKey, publicKey } = generator(prefixes, suffixes, flags.caseSensitive);
 
             notifier.notify({
                 title: 'Vanity Address Generated',
@@ -125,6 +136,9 @@ export default class Address extends Command {
 
             this.log();
             this.log('Address: ', address);
+            if (!!publicKey) {
+                this.log('Public:  ', publicKey);
+            }
             this.log('Private: ', privateKey);
 
             process.send && process.send({ generated: true });
@@ -164,12 +178,20 @@ function generateEvmAddress(prefixes: string[], suffixes: string[], caseSensitiv
     return { address, privateKey };
 }
 
-function generateSolanaAddress(prefixes: string[], suffixes: string[], caseSensitive = false) {
+function generateEd25519Address(prefixes: string[], suffixes: string[], caseSensitive = false, chain = 'solana') {
     let address = '';
-    let keypair, privateKey;
+    let keypair, privateKey, publicKey;
     do {
         keypair = nacl.sign.keyPair();
-        address = bs58.encode(keypair.publicKey);
+        if (chain === 'aptos') {
+            const hasher = sha3_256.create();
+            hasher.update(keypair.publicKey);
+            hasher.update('\x00');
+            address = hasher.hex();
+        } else {
+            address = bs58.encode(keypair.publicKey);
+        }
+
         if (!caseSensitive) {
             address = address.toLowerCase();
         }
@@ -178,8 +200,14 @@ function generateSolanaAddress(prefixes: string[], suffixes: string[], caseSensi
         (suffixes.length > 0 && !suffixes.some((s) => address.endsWith(s)))
     );
 
-    address = bs58.encode(keypair.publicKey);
+    if (chain === 'aptos') {
+        address = '0x' + address;
+        publicKey = '0x' + Buffer.from(keypair.publicKey).toString('hex');
+    } else {
+        address = bs58.encode(keypair.publicKey);
+    }
+
     privateKey = Buffer.from(keypair.secretKey).toString('hex');
 
-    return { address, privateKey };
+    return { address, privateKey, publicKey };
 }
