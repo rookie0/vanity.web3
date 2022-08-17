@@ -18,7 +18,7 @@ Examples:
 Vanity address generator for web3
 
 VERSION
-  vanity.web3/0.2.1 darwin-x64 node-v16.14.2
+  vanity.web3/0.2.2 darwin-x64 node-v16.14.2
 
 USAGE
   $ vanity [COMMAND]
@@ -27,7 +27,6 @@ COMMANDS
   address       Generate vanity address
   autocomplete  display autocomplete installation instructions
   help          Display help for vanity.
-  update        update the vanity CLI
 ```
 
 Just run `vanity address` to generate a vanity address, and you can get notified when the address is available.

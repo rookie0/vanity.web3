@@ -1,7 +1,7 @@
 {
   "name": "vanity.web3",
-  "description": "Vanity address generator for web3",
-  "version": "0.2.1",
+  "description": "Vanity address generator for web3 in command line, supports ethereum, solana and aptos",
+  "version": "0.2.2",
   "author": "Y",
   "bin": {
     "vanity": "./bin/run"
@@ -13,7 +13,6 @@
     "@oclif/plugin-autocomplete": "^1.3.0",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2",
-    "@oclif/plugin-update": "^3.0.0",
     "base-x": "^4.0.0",
     "js-sha3": "^0.8.0",
     "node-notifier": "^10.0.1",
@@ -67,8 +66,7 @@
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help",
-      "@oclif/plugin-autocomplete",
-      "@oclif/plugin-update"
+      "@oclif/plugin-autocomplete"
     ]
   },
   "repository": "https://github.com/rookie0/vanity.web3",
