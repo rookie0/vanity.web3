@@ -1,7 +1,7 @@
 {
   "name": "vanity.web3",
   "description": "Vanity address generator for web3",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Y",
   "bin": {
     "vanity": "./bin/run"
@@ -15,6 +15,7 @@
     "@oclif/plugin-plugins": "^2",
     "@oclif/plugin-update": "^3.0.0",
     "base-x": "^4.0.0",
+    "js-sha3": "^0.8.0",
     "node-notifier": "^10.0.1",
     "tweetnacl": "^1.0.3"
   },
@@ -54,6 +55,7 @@
     "web3",
     "ethereum",
     "solana",
+    "aptos",
     "cli"
   ],
   "license": "MIT",

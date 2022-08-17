@@ -1,6 +1,6 @@
 # vanity.web3
 
-Vanity address generator for web3 in command line. Supports EVM-Chains(Ethereum, Binance Smart Chain, Polygon, Avalanche etc) and Solana.
+Vanity address generator for web3 in command line. Supports EVM-Chains(Ethereum, Binance Smart Chain, Polygon, Avalanche etc), Solana and Aptos.
 
 Examples:
 
@@ -36,7 +36,7 @@ Just run `vanity address` to generate a vanity address, and you can get notified
 Generate vanity address
 
 USAGE
-  $ vanity address [PREFIX] [SUFFIX] [-c evm|solana] [-s] [-w <value>] [-n <value>]
+  $ vanity address [PREFIX] [SUFFIX] [-c evm|solana|aptos] [-s] [-w <value>] [-n <value>]
 
 ARGUMENTS
   PREFIX  The prefix to use for the vanity address, supports multiple prefixes separated by commas
@@ -44,7 +44,7 @@ ARGUMENTS
 
 FLAGS
   -c, --chain=<option>   [default: evm] The chain type to use for address generation
-                         <options: evm|solana>
+                         <options: evm|solana|aptos>
   -n, --num=<value>      [default: 1] The number of addresses to generate
   -s, --caseSensitive    Whether the vanity address is case sensitive
   -w, --workers=<value>  The number of workers to use for address generation, defaults to the half of the number of CPUs
@@ -56,6 +56,8 @@ EXAMPLES
   $ vanity address 012,111 abc,def -s -w 2
 
   $ vanity address so,far so,good -c solana -n 2
+
+  $ vanity address 0000 1111 -c aptos -w 1 -n 2
 ```
 
 ## Donate
