@@ -18,7 +18,7 @@ Examples:
 Vanity address generator for web3
 
 VERSION
-  vanity.web3/0.1.0 darwin-x64 node-v16.14.2
+  vanity.web3/0.2.1 darwin-x64 node-v16.14.2
 
 USAGE
   $ vanity [COMMAND]
@@ -36,7 +36,7 @@ Just run `vanity address` to generate a vanity address, and you can get notified
 Generate vanity address
 
 USAGE
-  $ vanity address [PREFIX] [SUFFIX] [-c evm|solana|aptos] [-s] [-w <value>] [-n <value>]
+  $ vanity address [PREFIX] [SUFFIX] [-c evm|solana|aptos] [-s] [-w <value>] [-n <value>] [-o <value>]
 
 ARGUMENTS
   PREFIX  The prefix to use for the vanity address, supports multiple prefixes separated by commas
@@ -46,6 +46,7 @@ FLAGS
   -c, --chain=<option>   [default: evm] The chain type to use for address generation
                          <options: evm|solana|aptos>
   -n, --num=<value>      [default: 1] The number of addresses to generate
+  -o, --output=<value>   The file to output the addresses to
   -s, --caseSensitive    Whether the vanity address is case sensitive
   -w, --workers=<value>  The number of workers to use for address generation, defaults to the half of the number of CPUs
 
@@ -57,7 +58,7 @@ EXAMPLES
 
   $ vanity address so,far so,good -c solana -n 2
 
-  $ vanity address 0000 1111 -c aptos -w 1 -n 2
+  $ vanity address 0000 1111 -c aptos -w 1 -n 2 -o output.txt
 ```
 
 ## Donate

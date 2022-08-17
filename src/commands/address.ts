@@ -2,16 +2,17 @@ import { Command, Flags } from '@oclif/core';
 import { privateToAddress, toChecksumAddress } from '@ethereumjs/util';
 import { randomBytes } from 'crypto';
 import { sha3_256 } from 'js-sha3';
-
-import nacl = require('tweetnacl');
-
-const os = require('os');
-const cluster = require('cluster');
-const notifier = require('node-notifier');
+import * as fs from 'fs';
+import * as path from 'path';
+import * as nacl from 'tweetnacl';
+import cluster from 'cluster';
+import * as os from 'os';
+import { notify } from 'node-notifier';
+import base from 'base-x';
 
 const HEX_CHARS = '0123456789ABCDEFabcdef';
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-const bs58 = require('base-x')(BASE58_ALPHABET);
+const bs58 = base(BASE58_ALPHABET);
 
 export default class Address extends Command {
     static description = 'Generate vanity address';
@@ -19,7 +20,7 @@ export default class Address extends Command {
     static examples = [
         '$ vanity address 012,111 abc,def -s -w 2',
         '$ vanity address so,far so,good -c solana -n 2',
-        '$ vanity address 0000 1111 -c aptos -w 1 -n 2',
+        '$ vanity address 0000 1111 -c aptos -w 1 -n 2 -o output.txt',
     ];
 
     static args = [
@@ -61,6 +62,11 @@ export default class Address extends Command {
             description: 'The number of addresses to generate',
             required: false,
             default: 1,
+        }),
+        output: Flags.file({
+            char: 'o',
+            description: 'The file to output the addresses to',
+            required: false,
         }),
     };
 
@@ -129,17 +135,26 @@ export default class Address extends Command {
         } else {
             const { address, privateKey, publicKey } = generator(prefixes, suffixes, flags.caseSensitive);
 
-            notifier.notify({
+            notify({
                 title: 'Vanity Address Generated',
                 message: address,
             });
 
-            this.log();
-            this.log('Address: ', address);
+            let content = `\nAddress: ${address}`;
             if (!!publicKey) {
-                this.log('Public:  ', publicKey);
+                content += `\nPublic:  ${publicKey}`;
             }
-            this.log('Private: ', privateKey);
+            content += `\nPrivate: ${privateKey}\n`;
+
+            if (flags.output) {
+                if (!fs.existsSync(flags.output)) {
+                    const dir = path.dirname(flags.output);
+                    fs.mkdirSync(dir, { recursive: true });
+                }
+                fs.writeFileSync(flags.output, content, { flag: 'a+' });
+            } else {
+                this.log(content);
+            }
 
             process.send && process.send({ generated: true });
         }
@@ -180,7 +195,7 @@ function generateEvmAddress(prefixes: string[], suffixes: string[], caseSensitiv
 
 function generateEd25519Address(prefixes: string[], suffixes: string[], caseSensitive = false, chain = 'solana') {
     let address = '';
-    let keypair, privateKey, publicKey;
+    let keypair, publicKey;
     do {
         keypair = nacl.sign.keyPair();
         if (chain === 'aptos') {
@@ -207,7 +222,7 @@ function generateEd25519Address(prefixes: string[], suffixes: string[], caseSens
         address = bs58.encode(keypair.publicKey);
     }
 
-    privateKey = Buffer.from(keypair.secretKey).toString('hex');
+    const privateKey = Buffer.from(keypair.secretKey).toString('hex');
 
     return { address, privateKey, publicKey };
 }
