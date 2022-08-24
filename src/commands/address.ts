@@ -9,6 +9,9 @@ import cluster from 'cluster';
 import * as os from 'os';
 import { notify } from 'node-notifier';
 import base from 'base-x';
+import * as RLP from 'rlp';
+import { keccak256 } from 'ethereum-cryptography/keccak';
+import { OutputFlags } from '@oclif/core/lib/interfaces';
 
 const HEX_CHARS = '0123456789ABCDEFabcdef';
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
@@ -19,6 +22,7 @@ export default class Address extends Command {
 
     static examples = [
         '$ vanity address 012,111 abc,def -s -w 2',
+        '$ vanity address 000 -C',
         '$ vanity address so,far so,good -c solana -n 2',
         '$ vanity address 0000 1111 -c aptos -w 1 -n 2 -o output.txt',
     ];
@@ -68,6 +72,12 @@ export default class Address extends Command {
             description: 'The file to output the addresses to',
             required: false,
         }),
+        contract: Flags.boolean({
+            char: 'C',
+            description: 'Whether the vanity address is for a contract address, now only supports evm',
+            required: false,
+            default: false,
+        }),
     };
 
     async run(): Promise<void> {
@@ -110,8 +120,7 @@ export default class Address extends Command {
                     return;
                 }
 
-                generator = (prefixes: string[], suffixes: string[], caseSensitive: boolean): any =>
-                    generateEd25519Address(prefixes, suffixes, caseSensitive, flags.chain);
+                generator = generateEd25519Address;
 
                 break;
         }
@@ -133,18 +142,22 @@ export default class Address extends Command {
                 });
             }
         } else {
-            const { address, privateKey, publicKey } = generator(prefixes, suffixes, flags.caseSensitive);
+            const { address, privateKey, publicKey, contract } = generator(prefixes, suffixes, flags);
 
             notify({
                 title: 'Vanity Address Generated',
-                message: address,
+                message: !!contract ? contract : address,
             });
 
-            let content = `\nAddress: ${address}`;
-            if (!!publicKey) {
-                content += `\nPublic:  ${publicKey}`;
+            let content = '';
+            if (!!contract) {
+                content += `\n${'Vanity Contract: '.padEnd(18)}${contract}`;
             }
-            content += `\nPrivate: ${privateKey}\n`;
+            content += `\n${'Vanity Address: '.padEnd(18)}${address}`;
+            if (!!publicKey) {
+                content += `\n${'Public Key: '.padEnd(18)}${publicKey}`;
+            }
+            content += `\n${'Private Key: '.padEnd(18)}${privateKey}\n`;
 
             if (flags.output) {
                 if (!fs.existsSync(flags.output)) {
@@ -173,13 +186,16 @@ function stringIncludes(string: string, substring: string, caseSensitive = false
     return substring.split('').every((char) => string.includes(char));
 }
 
-function generateEvmAddress(prefixes: string[], suffixes: string[], caseSensitive = false) {
+function generateEvmAddress(prefixes: string[], suffixes: string[], flags: OutputFlags<any>): any {
     let address = '';
-    let privateKey;
+    let privateKey, contract;
     do {
         privateKey = randomBytes(32);
         address = privateToAddress(privateKey).toString('hex');
-        if (caseSensitive) {
+        if (flags.contract) {
+            address = Buffer.from(keccak256(RLP.encode([privateToAddress(privateKey), 0])).slice(12)).toString('hex');
+        }
+        if (flags.caseSensitive) {
             address = toChecksumAddress('0x' + address).substring(2);
         }
     } while (
@@ -187,18 +203,21 @@ function generateEvmAddress(prefixes: string[], suffixes: string[], caseSensitiv
         (suffixes.length > 0 && !suffixes.some((s) => address.endsWith(s)))
     );
 
-    address = toChecksumAddress('0x' + address);
+    if (flags.contract) {
+        contract = toChecksumAddress('0x' + address);
+    }
+    address = toChecksumAddress('0x' + privateToAddress(privateKey).toString('hex'));
     privateKey = privateKey.toString('hex');
 
-    return { address, privateKey };
+    return { address, privateKey, contract };
 }
 
-function generateEd25519Address(prefixes: string[], suffixes: string[], caseSensitive = false, chain = 'solana') {
+function generateEd25519Address(prefixes: string[], suffixes: string[], flags: OutputFlags<any>): any {
     let address = '';
     let keypair, publicKey;
     do {
         keypair = nacl.sign.keyPair();
-        if (chain === 'aptos') {
+        if (flags.chain === 'aptos') {
             const hasher = sha3_256.create();
             hasher.update(keypair.publicKey);
             hasher.update('\x00');
@@ -207,7 +226,7 @@ function generateEd25519Address(prefixes: string[], suffixes: string[], caseSens
             address = bs58.encode(keypair.publicKey);
         }
 
-        if (!caseSensitive) {
+        if (!flags.caseSensitive) {
             address = address.toLowerCase();
         }
     } while (
@@ -215,7 +234,7 @@ function generateEd25519Address(prefixes: string[], suffixes: string[], caseSens
         (suffixes.length > 0 && !suffixes.some((s) => address.endsWith(s)))
     );
 
-    if (chain === 'aptos') {
+    if (flags.chain === 'aptos') {
         address = '0x' + address;
         publicKey = '0x' + Buffer.from(keypair.publicKey).toString('hex');
     } else {

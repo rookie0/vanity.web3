@@ -1,11 +1,14 @@
 # vanity.web3
 
-Vanity address generator for web3 in command line. Supports EVM-Chains(Ethereum, Binance Smart Chain, Polygon, Avalanche etc), Solana and Aptos.
+Vanity address generator for web3 in command line.
+
+Supports EVM-Chains(Ethereum, Binance Smart Chain, Polygon, Avalanche etc, and it's contract address), Solana and Aptos.
 
 Examples:
 
 - EVM: `0xbbBBF4d7FDF3E6993218FC8Cbd5975E34BB47777`
 - Solana: `SoLQCis48RxKMYKL26gBJDyofzVUweQd66S3xD8t4MS`
+- Contract Address: [`0x000007b812f197453E29819fb0B4EC543119e33E`](https://ropsten.etherscan.io/tx/0xd36e988000f962a0320feef17cd2ce7d6ff49d42f44e495edd616cac88ab10ef) created by private key `84c8745d552640833096ff7b7982f2cf9862b48610e2a1bb25fe53250f1f8b71`
 
 ## Installation
 
@@ -18,7 +21,7 @@ Examples:
 Vanity address generator for web3
 
 VERSION
-  vanity.web3/0.2.2 darwin-x64 node-v16.14.2
+  vanity.web3/0.2.3 darwin-x64 node-v16.14.2
 
 USAGE
   $ vanity [COMMAND]
@@ -35,13 +38,14 @@ Just run `vanity address` to generate a vanity address, and you can get notified
 Generate vanity address
 
 USAGE
-  $ vanity address [PREFIX] [SUFFIX] [-c evm|solana|aptos] [-s] [-w <value>] [-n <value>] [-o <value>]
+  $ vanity address [PREFIX] [SUFFIX] [-c evm|solana|aptos] [-s] [-w <value>] [-n <value>] [-o <value>] [-C]
 
 ARGUMENTS
   PREFIX  The prefix to use for the vanity address, supports multiple prefixes separated by commas
   SUFFIX  The suffix to use for the vanity address, supports multiple suffixes separated by commas
 
 FLAGS
+  -C, --contract         Whether the vanity address is for a contract address, now only supports evm
   -c, --chain=<option>   [default: evm] The chain type to use for address generation
                          <options: evm|solana|aptos>
   -n, --num=<value>      [default: 1] The number of addresses to generate
@@ -54,6 +58,8 @@ DESCRIPTION
 
 EXAMPLES
   $ vanity address 012,111 abc,def -s -w 2
+
+  $ vanity address 000 -C
 
   $ vanity address so,far so,good -c solana -n 2
 
