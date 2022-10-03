@@ -10,3 +10,4 @@ oclif.manifest.json
 
 .idea
 .DS_Store
+.npmrc

@@ -2,13 +2,15 @@
 
 Vanity address generator for web3 in command line.
 
-Supports EVM-Chains(Ethereum, Binance Smart Chain, Polygon, Avalanche etc, and it's contract address), Solana and Aptos.
+Supports EVM-Chains(Ethereum, Binance Smart Chain, Polygon, Avalanche etc, and it's contract address), Solana, Tron and Aptos.
 
 Examples:
 
 - EVM: `0xbbBBF4d7FDF3E6993218FC8Cbd5975E34BB47777`
 - Solana: `SoLQCis48RxKMYKL26gBJDyofzVUweQd66S3xD8t4MS`
 - Contract Address: [`0x000007b812f197453E29819fb0B4EC543119e33E`](https://ropsten.etherscan.io/tx/0xd36e988000f962a0320feef17cd2ce7d6ff49d42f44e495edd616cac88ab10ef) created by private key `84c8745d552640833096ff7b7982f2cf9862b48610e2a1bb25fe53250f1f8b71`
+- Tron: `TRXonvpjGWKgu4MQdJHJhQN6mtmjFkM7HX`, `0xAAB43D4E91EBC9A2e475b80BE725F8791C4e3C7d`
+- Aptos: `0x000000616a48469384a03540e9b391d9753c1e2cde382d058a58975585fca596`
 
 ## Installation
 
@@ -18,10 +20,10 @@ Examples:
 ## Usage
 
 ```shell
-Vanity address generator for web3
+Vanity address generator for web3 in command line, supports ethereum, solana, tron and aptos
 
 VERSION
-  vanity.web3/0.2.3 darwin-x64 node-v16.14.2
+  vanity.web3/0.3.0 darwin-x64 node-v16.14.2
 
 USAGE
   $ vanity [COMMAND]
@@ -38,7 +40,7 @@ Just run `vanity address` to generate a vanity address, and you can get notified
 Generate vanity address
 
 USAGE
-  $ vanity address [PREFIX] [SUFFIX] [-c evm|solana|aptos] [-s] [-w <value>] [-n <value>] [-o <value>] [-C]
+  $ vanity address [PREFIX] [SUFFIX] [-c evm|solana|aptos|tron] [-s] [-w <value>] [-n <value>] [-o <value>] [-C]
 
 ARGUMENTS
   PREFIX  The prefix to use for the vanity address, supports multiple prefixes separated by commas
@@ -47,7 +49,7 @@ ARGUMENTS
 FLAGS
   -C, --contract         Whether the vanity address is for a contract address, now only supports evm
   -c, --chain=<option>   [default: evm] The chain type to use for address generation
-                         <options: evm|solana|aptos>
+                         <options: evm|solana|aptos|tron>
   -n, --num=<value>      [default: 1] The number of addresses to generate
   -o, --output=<value>   The file to output the addresses to
   -s, --caseSensitive    Whether the vanity address is case sensitive
@@ -64,6 +66,8 @@ EXAMPLES
   $ vanity address so,far so,good -c solana -n 2
 
   $ vanity address 0000 1111 -c aptos -w 1 -n 2 -o output.txt
+
+  $ vanity address trx -c tron
 ```
 
 ## Donate
