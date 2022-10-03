@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { privateToAddress, toChecksumAddress } from '@ethereumjs/util';
+import { privateToAddress, toBuffer, toChecksumAddress } from '@ethereumjs/util';
 import { randomBytes } from 'crypto';
 import { sha3_256 } from 'js-sha3';
 import * as fs from 'fs';
@@ -11,6 +11,7 @@ import { notify } from 'node-notifier';
 import base from 'base-x';
 import * as RLP from 'rlp';
 import { keccak256 } from 'ethereum-cryptography/keccak';
+import { sha256 } from 'ethereum-cryptography/sha256';
 import { OutputFlags } from '@oclif/core/lib/interfaces';
 
 const HEX_CHARS = '0123456789ABCDEFabcdef';
@@ -25,6 +26,7 @@ export default class Address extends Command {
         '$ vanity address 000 -C',
         '$ vanity address so,far so,good -c solana -n 2',
         '$ vanity address 0000 1111 -c aptos -w 1 -n 2 -o output.txt',
+        '$ vanity address trx -c tron',
     ];
 
     static args = [
@@ -47,7 +49,7 @@ export default class Address extends Command {
             char: 'c',
             description: 'The chain type to use for address generation',
             required: false,
-            options: ['evm', 'solana', 'aptos'],
+            options: ['evm', 'solana', 'aptos', 'tron'],
             default: 'evm',
         }),
         caseSensitive: Flags.boolean({
@@ -92,34 +94,22 @@ export default class Address extends Command {
             return;
         }
 
+        let isValid: any;
+        if ((isValid = isValidChars(flags.chain, prefixes, suffixes, flags.caseSensitive)) !== true) {
+            this.error(isValid.error);
+            return;
+        }
+
         let generator;
         switch (flags.chain) {
             case 'evm':
-                if (
-                    !prefixes.every((p) => stringIncludes(HEX_CHARS, p, flags.caseSensitive)) ||
-                    !suffixes.every((s) => stringIncludes(HEX_CHARS, s, flags.caseSensitive))
-                ) {
-                    this.error(`Prefix and suffix must be hex strings(${HEX_CHARS}) for evm`);
-                    return;
-                }
-
+            case 'tron':
                 generator = generateEvmAddress;
 
                 break;
             case 'solana':
             case 'aptos':
             default:
-                const alphabet = flags.chain === 'solana' ? BASE58_ALPHABET : HEX_CHARS;
-                if (
-                    !prefixes.every((p) => stringIncludes(alphabet, p, flags.caseSensitive)) ||
-                    !suffixes.every((s) => stringIncludes(alphabet, s, flags.caseSensitive))
-                ) {
-                    this.error(
-                        `Prefix and suffix must be ${flags.chain === 'solana' ? 'base58' : 'hex'} strings(${alphabet}) for ${flags.chain}`,
-                    );
-                    return;
-                }
-
                 generator = generateEd25519Address;
 
                 break;
@@ -142,7 +132,7 @@ export default class Address extends Command {
                 });
             }
         } else {
-            const { address, privateKey, publicKey, contract } = generator(prefixes, suffixes, flags);
+            const { address, privateKey, publicKey, contract, evmAddress } = generator(prefixes, suffixes, flags);
 
             notify({
                 title: 'Vanity Address Generated',
@@ -154,6 +144,9 @@ export default class Address extends Command {
                 content += `\n${'Vanity Contract: '.padEnd(18)}${contract}`;
             }
             content += `\n${'Vanity Address: '.padEnd(18)}${address}`;
+            if (!!evmAddress) {
+                content += `\n${'EVM Address: '.padEnd(18)}${evmAddress}`;
+            }
             if (!!publicKey) {
                 content += `\n${'Public Key: '.padEnd(18)}${publicKey}`;
             }
@@ -174,6 +167,32 @@ export default class Address extends Command {
     }
 }
 
+function isValidChars(chain: string, prefixes: string[], suffixes: string[], caseSensitive = false) {
+    let type = '',
+        alphabet = '';
+    switch (chain) {
+        case 'evm':
+        case 'aptos':
+            type = 'hex';
+            alphabet = HEX_CHARS;
+
+            break;
+        case 'solana':
+        case 'tron':
+            type = 'base58';
+            alphabet = BASE58_ALPHABET;
+    }
+
+    if (
+        !prefixes.every((p) => stringIncludes(alphabet, p, caseSensitive)) ||
+        !suffixes.every((s) => stringIncludes(alphabet, s, caseSensitive))
+    ) {
+        return { error: `Prefix and suffix must be ${type} strings(${alphabet}) for ${chain}` };
+    }
+
+    return true;
+}
+
 function stringIncludes(string: string, substring: string, caseSensitive = false) {
     if (substring.length < 1) {
         return true;
@@ -186,30 +205,49 @@ function stringIncludes(string: string, substring: string, caseSensitive = false
     return substring.split('').every((char) => string.includes(char));
 }
 
+function toTronAddress(address: string) {
+    const bytes = toBuffer('0x41' + address);
+    const hash = sha256(sha256(bytes));
+
+    return bs58.encode(Buffer.concat([bytes, hash.slice(0, 4)]));
+}
+
 function generateEvmAddress(prefixes: string[], suffixes: string[], flags: OutputFlags<any>): any {
     let address = '';
-    let privateKey, contract;
+    let privateKey, contract, evmAddress;
     do {
         privateKey = randomBytes(32);
         address = privateToAddress(privateKey).toString('hex');
-        if (flags.contract) {
-            address = Buffer.from(keccak256(RLP.encode([privateToAddress(privateKey), 0])).slice(12)).toString('hex');
-        }
-        if (flags.caseSensitive) {
-            address = toChecksumAddress('0x' + address).substring(2);
+        if (flags.chain === 'tron') {
+            evmAddress = toChecksumAddress('0x' + address);
+            address = toTronAddress(address);
+            if (!flags.caseSensitive) {
+                address = address.toLowerCase();
+            }
+        } else {
+            if (flags.contract) {
+                address = Buffer.from(keccak256(RLP.encode([privateToAddress(privateKey), 0])).slice(12)).toString('hex');
+            }
+            if (flags.caseSensitive) {
+                address = toChecksumAddress('0x' + address).substring(2);
+            }
         }
     } while (
         (prefixes.length > 0 && !prefixes.some((p) => address.startsWith(p))) ||
         (suffixes.length > 0 && !suffixes.some((s) => address.endsWith(s)))
     );
 
-    if (flags.contract) {
-        contract = toChecksumAddress('0x' + address);
+    if (flags.chain !== 'tron') {
+        if (flags.contract) {
+            contract = toChecksumAddress('0x' + address);
+        }
+        address = toChecksumAddress('0x' + privateToAddress(privateKey).toString('hex'));
+    } else {
+        address = toTronAddress((evmAddress as string).substring(2).toLowerCase());
     }
-    address = toChecksumAddress('0x' + privateToAddress(privateKey).toString('hex'));
     privateKey = privateKey.toString('hex');
 
-    return { address, privateKey, contract };
+    return { address, privateKey, contract, evmAddress };
 }
 
 function generateEd25519Address(prefixes: string[], suffixes: string[], flags: OutputFlags<any>): any {
