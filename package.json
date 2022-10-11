@@ -1,7 +1,7 @@
 {
   "name": "vanity.web3",
   "description": "Vanity address generator for web3 in command line, supports ethereum, solana, tron and aptos",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "author": "Y",
   "bin": {
     "vanity": "./bin/run"
@@ -16,6 +16,7 @@
     "base-x": "^4.0.0",
     "js-sha3": "^0.8.0",
     "node-notifier": "^10.0.1",
+    "rlp": "^3.0.0",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
