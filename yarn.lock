@@ -3987,6 +3987,11 @@ rlp@4.0.0-beta.1:
   resolved "https://registry.npmjs.org/rlp/-/rlp-4.0.0-beta.1.tgz#46983ee758344e5eee48f135129407434cfea2b6"
   integrity sha512-UVIENF7Rw+nX5cpfzw6X3/oXNQKsSZ8HbDJUeU9RoIs1LLyMjcPZR1o26i1vFbpuVN8GRmcdopEYOMjVsLRsQQ==
 
+rlp@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.npmjs.org/rlp/-/rlp-3.0.0.tgz#5a60725ca4314a3a165feecca1836e4f2c1e2343"
+  integrity sha512-PD6U2PGk6Vq2spfgiWZdomLvRGDreBLxi5jv5M8EpRo3pU6VEm31KO+HFxE18Q3vgqfDrQ9pZA3FP95rkijNKw==
+
 run-async@^2.0.0, run-async@^2.4.0:
   version "2.4.1"
   resolved "https://registry.npmjs.org/run-async/-/run-async-2.4.1.tgz#8440eccf99ea3e70bd409d49aab88e10c189a455"
