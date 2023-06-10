@@ -252,7 +252,7 @@ function generateEvmAddress(prefixes: string[], suffixes: string[], flags: Outpu
 
 function generateEd25519Address(prefixes: string[], suffixes: string[], flags: OutputFlags<any>): any {
     let address = '';
-    let keypair, publicKey;
+    let keypair, publicKey, privateKey;
     do {
         keypair = nacl.sign.keyPair();
         if (flags.chain === 'aptos') {
@@ -275,11 +275,11 @@ function generateEd25519Address(prefixes: string[], suffixes: string[], flags: O
     if (flags.chain === 'aptos') {
         address = '0x' + address;
         publicKey = '0x' + Buffer.from(keypair.publicKey).toString('hex');
+        privateKey = Buffer.from(keypair.secretKey).slice(0, 32).toString('hex');
     } else {
         address = bs58.encode(keypair.publicKey);
+        privateKey = Buffer.from(keypair.secretKey).toString('hex');
     }
-
-    const privateKey = Buffer.from(keypair.secretKey).toString('hex');
 
     return { address, privateKey, publicKey };
 }
